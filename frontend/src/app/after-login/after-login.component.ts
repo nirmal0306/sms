@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import Swal from 'sweetalert2';
+
 @Component({
   selector: 'app-after-login',
   templateUrl: './after-login.component.html',
@@ -29,15 +31,15 @@ export class AfterLoginComponent implements OnInit {
     }
   }
   getUserData() {
-    const token = sessionStorage.getItem("token"); 
+    const token = sessionStorage.getItem("token");
     const storedEmail = sessionStorage.getItem("email"); // Get stored email
-    
+
     if (!token || !storedEmail) {
       return;
     }
 
     this.http.get<{ email: string, username: string }>("http://localhost:5000/getUser", {
-      headers: { 
+      headers: {
         Authorization: `Bearer ${token}`,
         'X-User-Email': storedEmail // Send email in header
       }
@@ -54,7 +56,26 @@ export class AfterLoginComponent implements OnInit {
     });
 }
   logout(): void {
-    localStorage.removeItem('token'); // Remove token from storage
-    window.location.href = '/resident-login'; // Redirect to login
-  }
+  const userName = localStorage.getItem('name') || 'User'; // ✅ Get stored name
+
+  // Remove stored data
+  localStorage.removeItem('token');
+  localStorage.removeItem('email');
+  localStorage.removeItem('password');
+  localStorage.removeItem('name');
+
+  // SweetAlert with username
+  Swal.fire({
+    icon: 'success',
+    title: `Goodbye, ${userName}! 👋`,
+    showConfirmButton: false,
+    timer: 1500
+  });
+
+  // Redirect after alert
+  setTimeout(() => {
+    window.location.href = '/resident-login';
+  }, 1500);
+}
+
 }

@@ -88,20 +88,20 @@ exports.adminLogin = async (req, res) => {
   const { email, password } = req.body;
 
   // Find the user by email
-  const user = await User.findOne({ email });
-  if (!user) {
+  const admin = await User.findOne({ email });
+  if (!admin) {
       return res.status(400).json({ message: 'User not found' });
   }
 
   // Compare the password with the hashed password
-  const isMatch = await bcrypt.compare(password, user.password);
+  const isMatch = await bcrypt.compare(password, admin.password);
   if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
   }
 
   // Generate a JWT token (valid for 1 hour) & store email in it
   const token = jwt.sign(
-      { userId: user._id, username: user.username, email: user.email }, 
+      { userId: admin._id, username: admin.username, email: admin.email }, 
       'your_jwt_secret_key', 
       { expiresIn: '1h' }
   );
@@ -109,7 +109,7 @@ exports.adminLogin = async (req, res) => {
   res.status(200).json({ message: 'Login successful', token });
 };
 
-exports.visitorLogin = async (req, res) => {
+exports.visitorLogin1 = async (req, res) => {
   const { name, email } = req.body;
 
   // Find the user by email
@@ -129,6 +129,46 @@ exports.visitorLogin = async (req, res) => {
 
   res.status(200).json({ message: 'Visitor Login successful', token });
 };
+
+exports.visitorLogin = async (req, res) => {
+  const { name, email } = req.body;
+
+  try {
+    // Find the user by email
+    const user = await Visitor.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    // Normalize function to compare names safely
+    const normalizeName = (str) =>
+      str.trim().toLowerCase().replace(/\s+/g, ' ');
+
+    // Check if name matches (case + space insensitive)
+    if (normalizeName(user.name) !== normalizeName(name)) {
+      return res.status(400).json({ message: 'Name does not match with email' });
+    }
+
+    // Generate a JWT token (valid for 1 hour)
+    const token = jwt.sign(
+      { userId: user._id, name: user.name, email: user.email },
+      'your_jwt_secret_key',
+      { expiresIn: '1h' }
+    );
+
+    res.status(200).json({
+      message: 'Visitor Login successful',
+      token,
+      name: user.name,
+      email: user.email,
+      image: user.image // send image for face comparison
+    });
+  } catch (err) {
+    console.error('Visitor login error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 
 exports.reslog = async (req, res) => {
   const { email, password } = req.body;
@@ -152,7 +192,7 @@ exports.reslog = async (req, res) => {
       { expiresIn: '1h' }
   );
 
-  res.status(200).json({ message: 'Resident Login successful', token });
+  res.status(200).json({ message: 'Resident Login successful', token, name: user.name,email: user.email });
 };
 
 exports.getResidentByEmail = async (req, res) => {

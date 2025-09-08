@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-
+import { AlertService } from '../services/alert.service';
 @Component({
   selector: 'app-admin-home',
   templateUrl: './admin-home.component.html',
@@ -7,13 +7,25 @@ import { Component, OnInit } from '@angular/core';
 })
 export class AdminHomeComponent implements OnInit {
 
-  constructor() { }
+  constructor(private alert: AlertService) { }
 
   ngOnInit(): void {
   }
   logout(): void {
-    localStorage.removeItem('token'); // Remove token from storage
-    window.location.href = '/admin-login'; // Redirect to login
+      const userName = localStorage.getItem('name') || 'Admin';
+
+      // Clear storage
+      localStorage.removeItem('token');
+      localStorage.removeItem('email');
+      localStorage.removeItem('password');
+      localStorage.removeItem('name');
+
+      // ✅ SweetAlert
+      this.alert.goodbye(userName);
+
+      // Redirect after alert
+      setTimeout(() => {
+        window.location.href = '/admin-login';
+      },1000);
+    }
   }
-  
-}
